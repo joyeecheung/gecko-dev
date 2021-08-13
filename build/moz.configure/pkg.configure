@@ -23,17 +23,18 @@ def pkg_config_version(pkg_config):
 @imports(_from="os", _import="environ")
 def pkg_config_vars(sysroot_path, multiarch_dir):
     if sysroot_path:
+        log.info("sysroot %s", sysroot_path)
         return namespace(
             PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
-            PKG_CONFIG_LIBDIR=":".join(
-                os.path.join(sysroot_path, d)
-                for d in (
-                    "usr/lib/pkgconfig",
-                    "usr/lib/{}/pkgconfig".format(multiarch_dir),
-                    "usr/share/pkgconfig",
-                )
-            ),
+            # PKG_CONFIG_LIBDIR=":".join(
+            #     os.path.join(sysroot_path, d)
+            #     for d in (
+            #         "usr/lib/pkgconfig",
+            #         "usr/lib/{}/pkgconfig".format(multiarch_dir),
+            #         "usr/share/pkgconfig",
+            #     )
+            # ),
         )
 
 
@@ -44,18 +45,18 @@ def pkg_config_env(vars):
         env = dict(environ)
         env["PKG_CONFIG_PATH"] = vars.PKG_CONFIG_PATH
         env["PKG_CONFIG_SYSROOT_DIR"] = vars.PKG_CONFIG_SYSROOT_DIR
-        env["PKG_CONFIG_LIBDIR"] = vars.PKG_CONFIG_LIBDIR
+        # env["PKG_CONFIG_LIBDIR"] = vars.PKG_CONFIG_LIBDIR
         return env
 
 
 set_config("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
 set_config("PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR)
-set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
+# set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
 add_old_configure_assignment("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
 add_old_configure_assignment(
     "PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR
 )
-add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
+# add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
 
 
 # Locates the given module using pkg-config.
@@ -119,7 +120,7 @@ def pkg_check_modules(var, package_desc, when=always, allow_missing=False, confi
         if retcode == 0:
             log.info("yes")
             return True
-        log.info("no")
+        log.info("no %d" % retcode)
         log_writer = log.warning if allow_missing else log.error
         with LineIO(lambda l: log_writer(l)) as o:
             o.write(stdout)
